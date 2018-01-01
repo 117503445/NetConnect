@@ -42,7 +42,7 @@ namespace Server
 
         private void Connect_GetMethod(string in_methodName, string in_methodParameters, out string out_methodName, out string out_methodParameters)
         {
-            out_methodName = "return";
+            out_methodName = "in";
             Type type = typeof(MethodCollection);
             object[] parameters = in_methodParameters.Split(',');
             out_methodParameters = (string)type.GetMethod(in_methodName).Invoke(null, parameters);

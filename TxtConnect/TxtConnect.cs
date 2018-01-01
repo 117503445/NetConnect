@@ -131,7 +131,7 @@ namespace NetConnect
         private void Watcher_Changed(object sender, FileSystemEventArgs e)
         {
             //Console.WriteLine("Watcher_Changed");
-            Thread.Sleep(100);//睡一会,防止线程占用
+            Thread.Sleep(200);//睡一会,防止线程占用
             LoadConnectTxt();
             HandleTasks();
             WriteConnectTxt();
@@ -226,6 +226,7 @@ namespace NetConnect
             this.path = path;
             Watcher.Path = this.path;
             Watcher.EnableRaisingEvents = true;
+            Watcher.Filter = ".txt";
             Watcher.Changed += Watcher_Changed;
             Watcher_Changed(null, null);
         }
@@ -264,7 +265,7 @@ namespace NetConnect
         /// <param name="e"></param>
         public void Watcher_Changed(object sender, FileSystemEventArgs e)
         {
-            //Console.WriteLine("Watcher_Changed");
+            Console.WriteLine("Server_Watcher_Changed");
             Thread.Sleep(100);//睡一会,防止线程占用
             LoadConnectTxt();
 
@@ -333,7 +334,7 @@ namespace NetConnect
             {
                 if (tasks[i].Handled == false && tasks[i].sender != netName)
                 {
-                    tasks[i] = HandleTask(tasks[i]);
+                    tasks.Add(HandleTask(tasks[i]));
                 }
             }
           
@@ -351,7 +352,7 @@ namespace NetConnect
                 Task newTask = new Task
                 {
                     sender = netName,
-                    Handled = false,
+                    Handled = true,
                     methodName = out_methodName,
                     methodParameters = out_methodParameters
                 };
