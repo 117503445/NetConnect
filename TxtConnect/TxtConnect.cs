@@ -130,7 +130,8 @@ namespace NetConnect
         /// <param name="e"></param>
         private void Watcher_Changed(object sender, FileSystemEventArgs e)
         {
-            //Console.WriteLine("Watcher_Changed");
+           
+            Console.WriteLine("client_Watcher_Changed"); 
             Thread.Sleep(200);//睡一会,防止线程占用
             LoadConnectTxt();
             HandleTasks();
@@ -142,6 +143,7 @@ namespace NetConnect
         /// </summary>
         private void LoadConnectTxt()
         {
+            Thread.Sleep(100);
             //Console.WriteLine("LoadConnectTxt");
             tasks = GetTask(File.ReadAllLines(connectPath, Encoding.Default).ToList());
         }
@@ -207,7 +209,7 @@ namespace NetConnect
             Task newTask = new Task
             {
                 sender = netName,
-                Handled = out_methodName=="in",
+                Handled = out_methodName == "in",
                 methodName = out_methodName,
                 methodParameters = out_methodParameters
             };
@@ -225,8 +227,9 @@ namespace NetConnect
         {
             this.path = path;
             Watcher.Path = this.path;
+            Watcher.IncludeSubdirectories = true;
             Watcher.EnableRaisingEvents = true;
-            Watcher.Filter = ".txt";
+            Watcher.Filter = "*.txt";
             Watcher.Changed += Watcher_Changed;
             Watcher_Changed(null, null);
         }
@@ -268,7 +271,6 @@ namespace NetConnect
             Console.WriteLine("Server_Watcher_Changed");
             Thread.Sleep(100);//睡一会,防止线程占用
             LoadConnectTxt();
-
             DisplayInfo();
         }
         /// <summary>
@@ -276,11 +278,11 @@ namespace NetConnect
         /// </summary>
         /// <param name="methodName"></param>
         /// <param name="methodParameters"></param>
-        public void SendInfo(string methodName, string methodParameters,string clientName)
+        public void SendInfo(string methodName, string methodParameters, string clientName)
         {
             string connectPath = path + "\\" + clientName + "\\Connect.txt";
-            Console.WriteLine(connectPath); 
-             File.AppendAllText(connectPath, string.Format("{0};{1};{2};{3}", netName, false, methodName, methodParameters));
+            Console.WriteLine(connectPath);
+            File.AppendAllText(connectPath, string.Format("{0};{1};{2};{3}", netName, false, methodName, methodParameters));
         }
         public void DisplayInfo()
         {
@@ -293,6 +295,7 @@ namespace NetConnect
         }
         private void LoadConnectTxt()
         {
+            Watcher.Changed -= Watcher_Changed;
             var ds = Directory.GetDirectories(path);
             foreach (var item in ds)
             {
@@ -301,6 +304,8 @@ namespace NetConnect
                 HandleTasks(tasks);
                 WriteConnectTxt(tasks, connectPath);
             }
+            Thread.Sleep(100);
+            Watcher.Changed += Watcher_Changed;
         }
         /// <summary>
         /// 将字符串转化为任务清单
@@ -329,15 +334,20 @@ namespace NetConnect
         /// </summary>
         private void HandleTasks(List<Task> tasks)
         {
-            //Console.WriteLine("HandleTasks");
+            Watcher.EnableRaisingEvents = false;
+            Console.WriteLine("Server_HandleTasks");
             for (int i = 0; i < tasks.Count; i++)
             {
                 if (tasks[i].Handled == false && tasks[i].sender != netName)
                 {
-                    tasks.Add(HandleTask(tasks[i]));
+                    Task newTask = HandleTask(tasks[i]);
+                    if (newTask != tasks[i])//若外部未绑定方法,会返回相同的任务
+                    {
+                        tasks.Add(newTask);
+                    }
                 }
             }
-          
+            Watcher.EnableRaisingEvents = true;
         }
         /// <summary>
         /// 处理单个的任务
@@ -366,6 +376,7 @@ namespace NetConnect
         /// </summary>
         private void WriteConnectTxt(List<Task> tasks, string connectPath)
         {
+            Thread.Sleep(100);
             //Console.WriteLine("WriteConnectTxt");
             Watcher.EnableRaisingEvents = false;
             List<string> list = new List<string>();
