@@ -31,7 +31,7 @@ namespace Server
         {
             Console.WriteLine("Get");
         }
-        string path = @"\\DESKTOP-ASUS\FolderShare";
+        string path = @"\\CLASSV\FolderShare";
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             connect = new TxtConnext_Server(path);

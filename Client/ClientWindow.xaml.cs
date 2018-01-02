@@ -29,7 +29,7 @@ namespace Client
         /// <summary>
         /// @"\\192.168.2.233\FolderShare"
         /// </summary>
-        public static string path = @"\\DESKTOP-ASUS\FolderShare";
+        public static string path = @"\\CLASSV\FolderShare";
 
         public static TxtConnect_Client connect;
 

@@ -64,6 +64,10 @@ namespace NetConnect
         /// 任务清单
         /// </summary>
         List<Task> tasks = new List<Task>();
+        /// <summary>
+        /// 本次是否被处理
+        /// </summary>
+        bool Handled = false;
         public delegate void InfoHandler(List<string> Info);
         /// <summary>
         /// tasks发生更新,要求刷新
@@ -121,7 +125,7 @@ namespace NetConnect
         /// <param name="methodParameters"></param>
         public void SendInfo(string methodName, string methodParameters)
         {
-            File.AppendAllText(connectPath, string.Format("{0};{1};{2};{3}", netName, false, methodName, methodParameters));
+            File.AppendAllText(connectPath, string.Format("{0};{1};{2};{3}", netName, false, methodName, methodParameters), Encoding.Default);
         }
         /// <summary>
         /// 似乎文件发生了改变
@@ -130,8 +134,8 @@ namespace NetConnect
         /// <param name="e"></param>
         private void Watcher_Changed(object sender, FileSystemEventArgs e)
         {
-           
-            Console.WriteLine("client_Watcher_Changed"); 
+
+            Console.WriteLine("client_Watcher_Changed");
             Thread.Sleep(200);//睡一会,防止线程占用
             LoadConnectTxt();
             HandleTasks();
@@ -146,12 +150,17 @@ namespace NetConnect
             Thread.Sleep(100);
             //Console.WriteLine("LoadConnectTxt");
             tasks = GetTask(File.ReadAllLines(connectPath, Encoding.Default).ToList());
+            Handled = false;
         }
         /// <summary>
         /// 将任务清单写入Connect.txt
         /// </summary>
         private void WriteConnectTxt()
         {
+            if (!Handled)
+            {
+                return;//如果没有处理,不写入文件
+            }
             //Console.WriteLine("WriteConnectTxt");
             Watcher.EnableRaisingEvents = false;
             List<string> list = new List<string>();
@@ -159,7 +168,7 @@ namespace NetConnect
             {
                 list.Add(tasks[i].ToString());
             }
-            File.WriteAllLines(connectPath, list);
+            File.WriteAllLines(connectPath, list, Encoding.Default);
             Watcher.EnableRaisingEvents = true;
         }
         /// <summary>
@@ -195,6 +204,7 @@ namespace NetConnect
                 if (tasks[i].Handled == false && tasks[i].sender != netName)
                 {
                     HandleTask(tasks[i]);
+                    Handled = true;
                 }
             }
         }
@@ -282,7 +292,7 @@ namespace NetConnect
         {
             string connectPath = path + "\\" + clientName + "\\Connect.txt";
             Console.WriteLine(connectPath);
-            File.AppendAllText(connectPath, string.Format("{0};{1};{2};{3}", netName, false, methodName, methodParameters));
+            File.AppendAllText(connectPath, string.Format("{0};{1};{2};{3}", netName, false, methodName, methodParameters), Encoding.Default);
         }
         public void DisplayInfo()
         {
@@ -300,7 +310,7 @@ namespace NetConnect
             foreach (var item in ds)
             {
                 string connectPath = item + "\\Connect.txt";
-                var tasks = GetTask(File.ReadAllLines(connectPath).ToList());
+                var tasks = GetTask(File.ReadAllLines(connectPath, Encoding.Default).ToList());
                 HandleTasks(tasks);
                 WriteConnectTxt(tasks, connectPath);
             }
