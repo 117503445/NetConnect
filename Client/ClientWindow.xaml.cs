@@ -40,12 +40,14 @@ namespace Client
 
         private void Connect_GetMethod(string in_methodName, string in_methodParameters, out string out_methodName, out string out_methodParameters)
         {
-            out_methodName = "in";
+
             Type type = typeof(MethodCollection);
             object[] parameters = in_methodParameters.Split(',');
-            out_methodParameters = (string)type.GetMethod(in_methodName).Invoke(null, parameters);
-        }
 
+            var result = ((string[])type.GetMethod(in_methodName).Invoke(null, parameters));
+            out_methodName = result[0];
+            out_methodParameters = result[1];
+        }
         private void Connect_ShowInfo(List<string> list)
         {
             TbInfo.Dispatcher.Invoke(new Action(delegate
@@ -98,21 +100,25 @@ namespace Client
         /// </summary>
         /// <param name="path">文件夹路径</param>
         /// <returns></returns>
-        public static string GetDirectories(string path)
+        public static string[] GetDirectories(string path)
         {
-
             var temp = Directory.GetDirectories(path);
             string result = "";
             foreach (var item in temp)
             {
                 result += item + ",";
             }
-            return result;
+            return new string[] { "in", result };
+        }
+        public static string[] SetChangHeTime(string Time) {
+            MessageBox.Show(string.Format("I received {0}",Time));
+            return new string[] { "in", "OK" };
         }
         public static void CopyFile(string sourceFileName, string destFileName)
         {
             destFileName = MainWindow.path + "\\" + MainWindow.netName + "\\" + destFileName;
             File.Copy(sourceFileName, destFileName);
         }
+
     }
 }

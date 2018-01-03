@@ -37,15 +37,18 @@ namespace Server
             connect = new TxtConnext_Server(path);
             connect.ShowInfo += (list) => { Console.WriteLine("Get!"); };
             connect.GetMethod += Connect_GetMethod;
-            connect.Watcher_Changed(new object(),null);
+            connect.Watcher_Changed(new object(), null);
         }
 
         private void Connect_GetMethod(string in_methodName, string in_methodParameters, out string out_methodName, out string out_methodParameters)
         {
-            out_methodName = "in";
+        
             Type type = typeof(MethodCollection);
             object[] parameters = in_methodParameters.Split(',');
-            out_methodParameters = (string)type.GetMethod(in_methodName).Invoke(null, parameters);
+
+            var result = ((string[])type.GetMethod(in_methodName).Invoke(null, parameters));
+            out_methodName = result[0];
+            out_methodParameters = result[1];
         }
         public static class MethodCollection
         {
@@ -54,7 +57,7 @@ namespace Server
             /// </summary>
             /// <param name="path">文件夹路径</param>
             /// <returns></returns>
-            public static string GetDirectories(string path)
+            public static string[] GetDirectories(string path)
             {
                 var temp = Directory.GetDirectories(path);
                 string result = "";
@@ -62,7 +65,11 @@ namespace Server
                 {
                     result += item + ",";
                 }
-                return result;
+                return new string[] { "in",result };
+            }
+            public static string[] GetChangHeTime(string r)
+            {
+                return new string[] {"SetChangHeTime", DateTime.Now.ToString() };
             }
         }
 
@@ -80,7 +87,7 @@ namespace Server
                 string s0 = message.Split(' ')[0];
                 string s1 = message.Split(' ')[1];
                 //File.AppendAllLines(connectPath, tasks);
-                connect.SendInfo(s0, s1,"client");
+                connect.SendInfo(s0, s1, "client");
                 t.Text = "";
             }
         }

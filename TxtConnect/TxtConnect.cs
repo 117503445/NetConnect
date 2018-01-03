@@ -356,7 +356,7 @@ namespace NetConnect
                 Task newTask = new Task
                 {
                     sender = netName,
-                    Handled = true,
+                    Handled = out_methodName=="in",
                     methodName = out_methodName,
                     methodParameters = out_methodParameters
                 };
