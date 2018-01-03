@@ -82,30 +82,7 @@ namespace NetConnect
         /// <summary>
         /// 任务
         /// </summary>
-        class Task
-        {
-            /// <summary>
-            /// 发送者
-            /// </summary>
-            public string sender = "";
-            /// <summary>
-            /// 是否已经被处理
-            /// </summary>
-            public bool Handled = false;
-            /// <summary>
-            /// 方法名
-            /// </summary>
-            public string methodName = "";
-            /// <summary>
-            /// 方法参数
-            /// </summary>
-            public string methodParameters = "";
-            public override string ToString()
-            {
-                return string.Format("{0};{1};{2};{3}", sender, Handled, methodName, methodParameters);
-            }
 
-        }
         /// <summary>
         /// 注册事件后需要手动更新以在第一次显示信息:(
         /// </summary>
@@ -125,7 +102,8 @@ namespace NetConnect
         /// <param name="methodParameters"></param>
         public void SendInfo(string methodName, string methodParameters)
         {
-            File.AppendAllText(connectPath, string.Format("{0};{1};{2};{3}", netName, false, methodName, methodParameters), Encoding.Default);
+            SafeIO.SafeAppendAllText(connectPath, string.Format("{0};{1};{2};{3}", netName, false, methodName, methodParameters));
+
         }
         /// <summary>
         /// 似乎文件发生了改变
@@ -149,7 +127,9 @@ namespace NetConnect
         {
             Thread.Sleep(100);
             //Console.WriteLine("LoadConnectTxt");
-            tasks = GetTask(File.ReadAllLines(connectPath, Encoding.Default).ToList());
+            tasks = GetTask(
+               SafeIO.SafeReadAllLines(connectPath).ToList()
+                );
             Handled = false;
         }
         /// <summary>
@@ -168,7 +148,8 @@ namespace NetConnect
             {
                 list.Add(tasks[i].ToString());
             }
-            File.WriteAllLines(connectPath, list, Encoding.Default);
+            SafeIO.SafeWriteAllLines(connectPath, list);
+
             Watcher.EnableRaisingEvents = true;
         }
         /// <summary>
@@ -292,7 +273,8 @@ namespace NetConnect
         {
             string connectPath = path + "\\" + clientName + "\\Connect.txt";
             Console.WriteLine(connectPath);
-            File.AppendAllText(connectPath, string.Format("{0};{1};{2};{3}", netName, false, methodName, methodParameters), Encoding.Default);
+            SafeIO.SafeAppendAllText(connectPath, string.Format("{0};{1};{2};{3}", netName, false, methodName, methodParameters));
+
         }
         public void DisplayInfo()
         {
@@ -310,7 +292,9 @@ namespace NetConnect
             foreach (var item in ds)
             {
                 string connectPath = item + "\\Connect.txt";
-                var tasks = GetTask(File.ReadAllLines(connectPath, Encoding.Default).ToList());
+                var tasks = GetTask(
+                    SafeIO.SafeReadAllLines(connectPath).ToList()
+                    );
                 HandleTasks(tasks);
                 WriteConnectTxt(tasks, connectPath);
             }
@@ -394,31 +378,119 @@ namespace NetConnect
             {
                 list.Add(tasks[i].ToString());
             }
-            File.WriteAllLines(connectPath, list, Encoding.Default);
+            SafeIO.SafeWriteAllLines(connectPath, list);
             Watcher.EnableRaisingEvents = true;
         }
-        class Task
+    }
+    class Task
+    {
+        /// <summary>
+        /// 发送者
+        /// </summary>
+        public string sender = "";
+        /// <summary>
+        /// 是否已经被处理
+        /// </summary>
+        public bool Handled = false;
+        /// <summary>
+        /// 方法名
+        /// </summary>
+        public string methodName = "";
+        /// <summary>
+        /// 方法参数
+        /// </summary>
+        public string methodParameters = "";
+        public override string ToString()
         {
-            /// <summary>
-            /// 发送者
-            /// </summary>
-            public string sender = "";
-            /// <summary>
-            /// 是否已经被处理
-            /// </summary>
-            public bool Handled = false;
-            /// <summary>
-            /// 方法名
-            /// </summary>
-            public string methodName = "";
-            /// <summary>
-            /// 方法参数
-            /// </summary>
-            public string methodParameters = "";
-            public override string ToString()
+            return string.Format("{0};{1};{2};{3}", sender, Handled, methodName, methodParameters);
+        }
+    }
+    static class SafeIO
+    {
+        private static int overTime = 3000;
+        private static int interval = 500;
+        /// <summary>
+        /// 最大超时时间(ms)
+        /// </summary>
+        public static int OverTime { get => overTime; set => overTime = value; }
+        /// <summary>
+        /// 每次尝试的时间间隔(ms)
+        /// </summary>
+        public static int Interval { get => interval; set => interval = value; }
+        /// <summary>
+        /// 安全的WriteAllText
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="text"></param>
+        public static void SafeWriteAllText(string path, string text)
+        {
+            if (WaitUntilSafe(path))
+
+                File.WriteAllText(path, text, Encoding.Default);
+
+        }
+        public static void SafeWriteAllLines(string path, IEnumerable<string> content)
+        {
+            if (WaitUntilSafe(path))
             {
-                return string.Format("{0};{1};{2};{3}", sender, Handled, methodName, methodParameters);
+                File.WriteAllLines(path, content, Encoding.Default);
             }
+        }
+
+        public static void SafeAppendAllText(string path, string text)
+        {
+            if (WaitUntilSafe(path))
+                File.AppendAllText(path, text, Encoding.Default);
+
+        }
+        public static string[] SafeReadAllLines(string path)
+        {
+            if (WaitUntilSafe(path))
+            {
+                return File.ReadAllLines(path, Encoding.Default);
+            }
+            else
+            {
+                throw new Exception();
+            }
+        }
+        /// <summary>
+        /// 直到文件可访问才放弃控制(同步),若文件可用则返回true
+        /// </summary>
+        private static bool WaitUntilSafe(string path)
+        {
+
+            int nowTime = 0;
+            while (IsFileInUse(path))
+            {
+                Console.WriteLine("It's Using!!!");
+                Thread.Sleep(interval);
+                nowTime += interval;
+                if (nowTime > overTime)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        private static bool IsFileInUse(string fileName)
+        {
+            bool inUse = true;
+            FileStream fs = null;
+            try
+            {
+                fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.None);
+                inUse = false;
+            }
+            catch
+            {
+            }
+            finally
+            {
+                if (fs != null)
+                    fs.Close();
+            }
+            return inUse;//true表示正在使用,false没有使用  
         }
     }
 }
