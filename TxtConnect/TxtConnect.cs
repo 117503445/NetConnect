@@ -251,7 +251,7 @@ namespace NetConnect
         /// 向外部类请求结果
         /// </summary>
         public event MethodHandler GetMethod;
-
+        bool handled=false;
         /// <summary>
         /// 似乎文件发生了改变
         /// </summary>
@@ -339,6 +339,7 @@ namespace NetConnect
                     {
                         tasks.Add(newTask);
                     }
+                    handled = true;
                 }
             }
             Watcher.EnableRaisingEvents = true;
@@ -356,7 +357,7 @@ namespace NetConnect
                 Task newTask = new Task
                 {
                     sender = netName,
-                    Handled = out_methodName=="in",
+                    Handled = out_methodName == "in",
                     methodName = out_methodName,
                     methodParameters = out_methodParameters
                 };
@@ -370,6 +371,10 @@ namespace NetConnect
         /// </summary>
         private void WriteConnectTxt(List<Task> tasks, string connectPath)
         {
+            if (!handled)
+            {
+                return;
+            }
             Thread.Sleep(100);
             //Console.WriteLine("WriteConnectTxt");
             Watcher.EnableRaisingEvents = false;
@@ -408,7 +413,7 @@ namespace NetConnect
     static class SafeIO
     {
         private static int overTime = 3000;
-        private static int interval = 500;
+        private static int interval = 100;
         /// <summary>
         /// 最大超时时间(ms)
         /// </summary>
@@ -424,54 +429,66 @@ namespace NetConnect
         /// <param name="text"></param>
         public static void SafeWriteAllText(string path, string text)
         {
-            if (WaitUntilSafe(path))
-
-                File.WriteAllText(path, text, Encoding.Default);
-
+            int nowTime = 0;
+            while (nowTime <= overTime)
+            {
+                try
+                {
+                    File.WriteAllText(path, text, Encoding.Default);
+                }
+                catch { }
+                nowTime += interval;
+                Thread.Sleep(interval);
+            }
         }
         public static void SafeWriteAllLines(string path, IEnumerable<string> content)
         {
-            if (WaitUntilSafe(path))
+
+            int nowTime = 0;
+            while (nowTime <= overTime)
             {
-                File.WriteAllLines(path, content, Encoding.Default);
+                try
+                {
+                    File.WriteAllLines(path, content, Encoding.Default);
+                }
+                catch { }
+                nowTime += interval;
+                Thread.Sleep(interval);
             }
         }
 
         public static void SafeAppendAllText(string path, string text)
         {
-            if (WaitUntilSafe(path))
-                File.AppendAllText(path, text, Encoding.Default);
+            int nowTime = 0;
+            while (nowTime <= overTime)
+            {
+                try
+                {
+                    File.AppendAllText(path, text, Encoding.Default);
+                }
+                catch { }
+                nowTime += interval;
+                Thread.Sleep(interval);
+            }
+
 
         }
         public static string[] SafeReadAllLines(string path)
         {
-            if (WaitUntilSafe(path))
-            {
-                return File.ReadAllLines(path, Encoding.Default);
-            }
-            else
-            {
-                throw new Exception();
-            }
-        }
-        /// <summary>
-        /// 直到文件可访问才放弃控制(同步),若文件可用则返回true
-        /// </summary>
-        private static bool WaitUntilSafe(string path)
-        {
 
             int nowTime = 0;
-            while (IsFileInUse(path))
+            while (nowTime <= overTime)
             {
-                Console.WriteLine("It's Using!!!");
-                Thread.Sleep(interval);
-                nowTime += interval;
-                if (nowTime > overTime)
+                try
                 {
-                    return false;
+                    return File.ReadAllLines(path, Encoding.Default);
                 }
+                catch { }
+                nowTime += interval;
+                Thread.Sleep(interval);
             }
-            return true;
+            return null;
+
         }
         private static bool IsFileInUse(string fileName)
         {
