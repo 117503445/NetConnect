@@ -435,6 +435,7 @@ namespace NetConnect
                 try
                 {
                     File.WriteAllText(path, text, Encoding.Default);
+                    return;
                 }
                 catch { }
                 nowTime += interval;
@@ -450,6 +451,7 @@ namespace NetConnect
                 try
                 {
                     File.WriteAllLines(path, content, Encoding.Default);
+                    return;
                 }
                 catch { }
                 nowTime += interval;
@@ -465,6 +467,7 @@ namespace NetConnect
                 try
                 {
                     File.AppendAllText(path, text, Encoding.Default);
+                    return;
                 }
                 catch { }
                 nowTime += interval;
@@ -489,25 +492,6 @@ namespace NetConnect
             }
             return null;
 
-        }
-        private static bool IsFileInUse(string fileName)
-        {
-            bool inUse = true;
-            FileStream fs = null;
-            try
-            {
-                fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.None);
-                inUse = false;
-            }
-            catch
-            {
-            }
-            finally
-            {
-                if (fs != null)
-                    fs.Close();
-            }
-            return inUse;//true表示正在使用,false没有使用  
         }
     }
 }
