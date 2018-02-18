@@ -14,7 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Threading;
 using System.Windows.Threading;
-
+using System.IO;
 namespace EasyNotePad
 {
     /// <summary>
@@ -46,7 +46,12 @@ namespace EasyNotePad
 
         private void DispatcherTimer_Tick(object sender, EventArgs e)
         {
-            Tb.Text =System.IO.File.ReadAllText(path);
+            Tb.Text = File.ReadAllText(path);
+        }
+
+        private void BtnClear_Click(object sender, RoutedEventArgs e)
+        {
+            File.WriteAllText(path,"");
         }
     }
 }

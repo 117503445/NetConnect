@@ -15,6 +15,8 @@ using System.Windows.Shapes;
 using System.IO;
 using System.Threading;
 using NetConnect;
+using NetConnect.Active;
+
 namespace Client
 {
     /// <summary>
@@ -29,7 +31,7 @@ namespace Client
         /// <summary>
         /// @"\\192.168.2.233\FolderShare"
         /// </summary>
-        public static string path = @"\\CLASSV\FolderShare";
+        public static string path = @"\\DESKTOP-ASUS\FolderShare";
 
         public static TxtConnect_Client connect;
 
@@ -44,7 +46,7 @@ namespace Client
             Type type = typeof(MethodCollection);
             object[] parameters = in_methodParameters.Split(',');
 
-            var result = ((string[])type.GetMethod(in_methodName).Invoke(null, parameters));
+            var result = ((string[])type.GetMethod(in_methodName).Invoke(this, parameters));
             out_methodName = result[0];
             out_methodParameters = result[1];
         }
@@ -110,14 +112,16 @@ namespace Client
             }
             return new string[] { "in", result };
         }
-        public static string[] SetChangHeTime(string Time) {
-            MessageBox.Show(string.Format("I received {0}",Time));
+        public static string[] SetChangHeTime(string Time)
+        {
+            MessageBox.Show(string.Format("I received {0}", Time));
             return new string[] { "in", "OK" };
         }
-        public static void CopyFile(string sourceFileName, string destFileName)
+        public static string[] CopyFile(string sourceFileName, string destFileName)
         {
             destFileName = MainWindow.path + "\\" + MainWindow.netName + "\\" + destFileName;
             File.Copy(sourceFileName, destFileName);
+            return new string[] { "in", "OK" };
         }
 
     }

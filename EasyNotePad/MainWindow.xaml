@@ -9,5 +9,6 @@
     <Grid>
         <Button Content="Button" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="410,10,0,0" Click="Button_Click"/>
         <TextBlock x:Name="Tb" TextWrapping="Wrap" Text="TextBox" Margin="38,34,32,20"/>
+        <Button Content="BtnClear" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="330,10,0,0" Click="BtnClear_Click"/>
     </Grid>
 </Window>

@@ -14,6 +14,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using NetConnect;
+using NetConnect.Active;
+
 namespace Server
 {
     /// <summary>
@@ -31,7 +33,7 @@ namespace Server
         {
             Console.WriteLine("Get");
         }
-        string path = @"\\CLASSV\FolderShare";
+        string path = @"\\DESKTOP-ASUS\FolderShare";
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             connect = new TxtConnext_Server(path);
@@ -42,7 +44,7 @@ namespace Server
 
         private void Connect_GetMethod(string in_methodName, string in_methodParameters, out string out_methodName, out string out_methodParameters)
         {
-        
+
             Type type = typeof(MethodCollection);
             object[] parameters = in_methodParameters.Split(',');
 
@@ -65,11 +67,11 @@ namespace Server
                 {
                     result += item + ",";
                 }
-                return new string[] { "in",result };
+                return new string[] { "in", result };
             }
             public static string[] GetChangHeTime(string r)
             {
-                return new string[] {"SetChangHeTime", DateTime.Now.ToString() };
+                return new string[] { "SetChangHeTime", DateTime.Now.ToString() };
             }
         }
 
