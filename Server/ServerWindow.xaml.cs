@@ -42,15 +42,15 @@ namespace Server
             connect.Watcher_Changed(new object(), null);
         }
 
-        private void Connect_GetMethod(string in_methodName, string in_methodParameters, out string out_methodName, out string out_methodParameters)
+        private void Connect_GetMethod(object sender, TaskEventArgs e)
         {
-
+            //string in_methodName, string in_methodParameters, out string out_methodName, out string out_methodParameters
             Type type = typeof(MethodCollection);
-            object[] parameters = in_methodParameters.Split(',');
+            object[] parameters = e.in_methodParameters.Split(',');
 
-            var result = ((string[])type.GetMethod(in_methodName).Invoke(null, parameters));
-            out_methodName = result[0];
-            out_methodParameters = result[1];
+            var result = ((string[])type.GetMethod(e.in_methodName).Invoke(null, parameters));
+            e.out_methodName = result[0];
+            e.out_methodParameters = result[1];
         }
         public static class MethodCollection
         {

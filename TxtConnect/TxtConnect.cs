@@ -70,12 +70,10 @@ namespace NetConnect
             /// 本次是否被处理
             /// </summary>
             bool Handled = false;
-            public delegate void InfoHandler(List<string> Info);
             /// <summary>
             /// tasks发生更新,要求刷新
             /// </summary>
-            public event InfoHandler ShowInfo;
-
+            public event EventHandler<List<string>> ShowInfo;
             public delegate void MethodHandler(string in_methodName, string in_methodParameters, out string out_methodName, out string out_methodParameters);
             /// <summary>
             /// 向外部类请求结果
@@ -95,7 +93,7 @@ namespace NetConnect
                 {
                     list.Add(item.ToString());
                 }
-                ShowInfo?.Invoke(list);
+                ShowInfo?.Invoke(this, list);
             }
             /// <summary>
             /// 输出信息
@@ -247,11 +245,10 @@ namespace NetConnect
             /// tasks发生更新,要求刷新
             /// </summary>
             public event InfoHandler ShowInfo;
-            public delegate void MethodHandler(string in_methodName, string in_methodParameters, out string out_methodName, out string out_methodParameters);
             /// <summary>
             /// 向外部类请求结果
             /// </summary>
-            public event MethodHandler GetMethod;
+            public event EventHandler<TaskEventArgs> GetMethod;
             bool handled = false;
             /// <summary>
             /// 似乎文件发生了改变
@@ -353,14 +350,15 @@ namespace NetConnect
                 Console.WriteLine("Server_HandleTask");
                 if (GetMethod != null)
                 {
-                    GetMethod(task.methodName, task.methodParameters, out string out_methodName, out string out_methodParameters);
+                    var arg = new TaskEventArgs(task.methodName, task.methodParameters);
+                    GetMethod(this,arg);
                     task.Handled = true;//已处理该任务
                     Task newTask = new Task
                     {
                         sender = netName,
-                        Handled = out_methodName == "in",
-                        methodName = out_methodName,
-                        methodParameters = out_methodParameters
+                        Handled = arg.out_methodName == "in",
+                        methodName = arg.out_methodName,
+                        methodParameters = arg.out_methodParameters
                     };
                     return newTask;
                 }
@@ -387,6 +385,15 @@ namespace NetConnect
                 SafeIO.SafeWriteAllLines(connectPath, list);
                 Watcher.EnableRaisingEvents = true;
             }
+        }
+        public class TaskEventArgs : EventArgs
+        {
+            public string in_methodName;
+            public string in_methodParameters;
+            public string out_methodName;
+            public string out_methodParameters;
+            public TaskEventArgs() { }
+            public TaskEventArgs(string in_methodName, string in_methodParameters) { this.in_methodName = in_methodName; this.in_methodParameters = in_methodParameters; }
         }
         class Task
         {

@@ -50,7 +50,7 @@ namespace Client
             out_methodName = result[0];
             out_methodParameters = result[1];
         }
-        private void Connect_ShowInfo(List<string> list)
+        private void Connect_ShowInfo(object sender,List<string> list)
         {
             TbInfo.Dispatcher.Invoke(new Action(delegate
             {
